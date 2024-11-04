@@ -34,7 +34,7 @@ class Families extends DataConn {
 
             //--- URLs ---//
             $row->ykt_linea = '';
-            $row->update_family_information = '';
+            $row->update_family_information = 'https://intra-ykt.com/intraschool/ykt-online/external_campaigns/data_update/families/login.php';
             //--- --- ---//
             
             //--- Dirección principal ---//
