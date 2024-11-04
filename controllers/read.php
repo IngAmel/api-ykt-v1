@@ -2,6 +2,9 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
+$path_isc = dirname(__FILE__, 3);
+
+include_once "$path_isc/vendor/autoload.php";
 include_once 'class/Families.php';
 
 function getAllFamiliesActives(){

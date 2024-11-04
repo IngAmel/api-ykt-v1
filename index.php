@@ -1,4 +1,5 @@
 <?php
+set_time_limit(0);
 include 'controllers/read.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET'){
