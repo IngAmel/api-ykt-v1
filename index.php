@@ -2,13 +2,13 @@
 set_time_limit(0);
 include 'controllers/read.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET'){
-    if(isset($_GET['req_data'])){
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    if (isset($_GET['req_data'])) {
         $requested_data = $_GET['req_data'];
         $status_code = 400;
         $data = null;
 
-        switch($requested_data){
+        switch ($requested_data) {
             case 'get-all-families-actives':
                 $status_code = 200;
                 $data = getAllFamiliesActives();
@@ -39,19 +39,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET'){
                 break;
         }
 
-        http_response_code($status_code);     
+        http_response_code($status_code);
         echo json_encode(
             array(
                 "data" => $data
-                )
+            )
         );
 
     } else {
-        http_response_code(404);     
+        http_response_code(404);
         echo json_encode(
             array(
                 "data" => "The requested data parameter was not sent."
-                )
+            )
+        );
+    }
+} else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $base_path = "intraschool/api-ykt/index.php/";
+    $request_uri = $_SERVER["REQUEST_URI"];
+    $route = str_replace($base_path, "", $request_uri);
+    if ($route === "/books_sale") {
+        include_once "pages/books_sale.php";
+        $result = create_charge_with_card();
+        http_response_code($result["response_code"]);
+        echo json_encode($result["response"]);
+    } else {
+        http_response_code(404);
+        echo json_encode(
+            array(
+                "data" => "The requested was invalid"
+            )
         );
     }
 }
