@@ -54,21 +54,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             )
         );
     }
-} else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $base_path = "intraschool/api-ykt/index.php/";
-    $request_uri = $_SERVER["REQUEST_URI"];
-    $route = str_replace($base_path, "", $request_uri);
-    if ($route === "/books_sale") {
-        include_once "pages/books_sale.php";
-        $result = create_charge_with_card();
-        http_response_code($result["response_code"]);
-        echo json_encode($result["response"]);
-    } else {
-        http_response_code(404);
-        echo json_encode(
-            array(
-                "data" => "The requested was invalid"
-            )
-        );
-    }
 }

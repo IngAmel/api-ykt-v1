@@ -20,3 +20,12 @@ function create_charge_with_card()
     $payments = new Payments();
     return $payments->create_charge_with_card($customer, $formData);
 }
+function get_charge($id_charge)
+{
+    $payments = new Payments();
+    $data = $payments->get_charge($id_charge);
+    return [
+        "response_code" => $data->response ? 200 : 404,
+        "response" => $data
+    ];
+}
