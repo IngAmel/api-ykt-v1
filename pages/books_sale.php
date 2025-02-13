@@ -35,47 +35,51 @@ function mail_with_envelope()
 {
     $billingMail = new BillingMail;
     $mailerSingleton = MailerSingleton::getInstance();
-    $data = json_decode(file_get_contents('php://input'), true);
-    $mails = $data["mails"];
-    $secretMails = $data["secretMails"] ?? [];
+    $data = json_decode(file_get_contents('php://input'), false);
+    $mails = $data->mails;
+    $secretMails = $data->secretMails ?? [];
     $named_params = [
-        'name_from' => $data['name_from'],
+        'name_from' => $data->name_from,
         'mails' => $mails,
         'secretMails' => $secretMails,
-        'subject' => $data['subject'],
+        'subject' => $data->subject,
         'isHTML' => true
     ];
     $mailerSingleton->setParams($named_params);
 
-    $base64File = $data["file"];
+    if (isset($data->file)) {
+        $base64File = $data->file ?? '';
 
-    // Eliminar el prefijo "data:image/jpeg;base64,"
-    if (strpos($base64File, 'base64,') !== false) {
-        $base64File = explode('base64,', $base64File)[1];
+        // Eliminar el prefijo "data:image/jpeg;base64,"
+        if (strpos($base64File, 'base64,') !== false) {
+            $base64File = explode('base64,', $base64File)[1];
+        }
+        $fileName = $data->file_name ?? "Comprobante de pago.pdf";
+
+        $fileContent = base64_decode($base64File);
+        if ($fileContent === false) {
+            return [
+                "response_code" => 400,
+                "response" => [
+                    "response" => false,
+                    "msg" => "El archivo base64 es inválido."
+                ]
+            ];
+        }
+
+        $tempFilePath = sys_get_temp_dir() . "/" . $fileName;
+        file_put_contents($tempFilePath, $fileContent);
+        $mailerSingleton->addAttachment($tempFilePath, $fileName);
     }
-    $fileName = $data["file_name"] ?? "Comprobante de pago.pdf";
 
-    $fileContent = base64_decode($base64File);
-    if ($fileContent === false) {
-        return [
-            "response_code" => 400,
-            "response" => [
-                "response" => false,
-                "msg" => "El archivo base64 es inválido."
-            ]
-        ];
-    }
 
-    $tempFilePath = sys_get_temp_dir() . "/" . $fileName;
-    file_put_contents($tempFilePath, $fileContent);
-    $mailerSingleton->addAttachment($tempFilePath, $fileName);
-
-    $mailerSingleton->Body = $data["text"];
-    //$mailerSingleton->Body = $billingMail->get_billing_mail_with_envelope($data["text"]);
+    $mailerSingleton->Body = $billingMail->get_mail($data->shop_list, $data->family);
 
     $status = $mailerSingleton->send();
-    if (file_exists($tempFilePath)) {
-        unlink($tempFilePath);
+    if (isset($data->file)) {
+        if (file_exists($tempFilePath)) {
+            unlink($tempFilePath);
+        }
     }
     $response = [
         "response" => $status,
