@@ -70,7 +70,8 @@ function mail_with_envelope()
     file_put_contents($tempFilePath, $fileContent);
     $mailerSingleton->addAttachment($tempFilePath, $fileName);
 
-    $mailerSingleton->Body = $billingMail->get_billing_mail_with_envelope($data["text"]);
+    $mailerSingleton->Body = $data["text"];
+    //$mailerSingleton->Body = $billingMail->get_billing_mail_with_envelope($data["text"]);
 
     $status = $mailerSingleton->send();
     if (file_exists($tempFilePath)) {
