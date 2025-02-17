@@ -52,6 +52,10 @@ class Products extends DataConn
         }
         return implode(", ", $set);
     }
+    public function get_base_path()
+    {
+        return $this->base_path;
+    }
     public function delete_product_img($product_id)
     {
         $pattern = "$this->base_path/{$product_id}_product.*"; // Patrón para buscar archivos

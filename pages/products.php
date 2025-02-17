@@ -51,7 +51,7 @@ function update_product($id)
 
     // Dividir los datos en partes
     $parts = array_slice(explode($boundary, $rawData), 1, -1); // Ignorar el primer y último elemento
-    $base_path = dirname(__FILE__, 3) . "/online_sales/public/uploads";
+    $base_path = $product->get_base_path();
 
     if (!is_dir($base_path)) {
         mkdir($base_path, 0777, true);
