@@ -16,7 +16,7 @@ class Products extends DataConn
     {
         $this->conn = $this->dbConn();
         $this->table = "online_sales.products";
-        $this->short_url = "/online_sales/public/uploads/book_covers";
+        $this->short_url = "/online_sales/public/uploads/book_covers/";
         $this->base_path = dirname(__FILE__, 3) . $this->short_url;
     }
     public function get_products()
