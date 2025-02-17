@@ -15,7 +15,7 @@ class Products extends DataConn
     {
         $this->conn = $this->dbConn();
         $this->table = "online_sales.products";
-        $this->base_path = dirname(__FILE__, 3) . "/online_sales/public/uploads";
+        $this->base_path = dirname(__FILE__, 3) . "/online_sales/public/uploads/book_covers";
     }
     public function get_products()
     {
