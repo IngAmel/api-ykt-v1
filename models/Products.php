@@ -11,10 +11,12 @@ class Products extends DataConn
     private $conn;
     private $table;
     private $base_path;
+    private $short_url;
     public function __construct()
     {
         $this->conn = $this->dbConn();
         $this->table = "online_sales.products";
+        $this->short_url = "public/uploads/";
         $this->base_path = dirname(__FILE__, 3) . "/online_sales/public/uploads/book_covers";
     }
     public function get_products()
@@ -90,7 +92,7 @@ class Products extends DataConn
         $product = $stmt->fetch(PDO::FETCH_OBJ);
         if ($product->img) {
             $imagePath = $this->get_product_img($id_product);
-            $product->img = $imagePath ? "public/uploads/" . basename($imagePath) : null;
+            $product->img = $imagePath ? $this->short_url . basename($imagePath) : null;
         }
         return [
             "response" => $response,
