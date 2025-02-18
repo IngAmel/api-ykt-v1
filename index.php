@@ -17,9 +17,10 @@ $route = str_replace($base_path, "", $request_uri);
 $route_segments = explode("/", trim($route, "/"));
 
 // Si no hay segmentos en la URL, ejecutar la lógica principal de index.php
-if (empty($route_segments[0])) {
+if (isset($_GET['req_data'])) {
     include 'controllers/read.php';
-    if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['req_data'])) {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+
         $requested_data = $_GET['req_data'];
         $status_code = 400;
         $data = null;

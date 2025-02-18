@@ -9,19 +9,29 @@ use App\Models\DataConn;
 class Products extends DataConn
 {
     private $conn;
+    private $db;
     private $table;
     private $base_path;
     private $short_url;
     public function __construct()
     {
         $this->conn = $this->dbConn();
-        $this->table = "online_sales.products";
+        $this->db = "online_sales";
+        $this->table = "$this->db.products";
         $this->short_url = "/online_sales/public/uploads/book_covers";
         $this->base_path = dirname(__FILE__, 3) . $this->short_url;
     }
     public function get_products()
     {
-        $sql = "SELECT * FROM $this->table";
+        $sql = "SELECT t1.* ,
+        t4.campus_name,t5.section,t6.degree,t7.academic_level
+        FROM $this->table AS t1 
+        INNER JOIN $this->db.product_level_relation AS t2 ON t1.product_id = t2.product_id
+        INNER JOIN school_control_ykt.level_grades_combinations AS t3 ON t2.id_level_grade_combination = t3.id_level_grade_combination
+        INNER JOIN school_control_ykt.campus AS t4 ON t3.id_campus = t4.id_campus
+        INNER JOIN school_control_ykt.sections AS t5 ON t3.id_section = t5.id_section
+        INNER JOIN school_control_ykt.academic_levels_grade AS t6 ON t3.id_level_grade = t6.id_level_grade
+        INNER JOIN school_control_ykt.academic_levels  AS t7 ON t3.id_academic_level = t7.id_academic_level";
         $stmt = $this->conn->prepare($sql);
         $response = $stmt->execute();
         return (object) [
