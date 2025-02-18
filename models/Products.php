@@ -18,8 +18,8 @@ class Products extends DataConn
         $this->conn = $this->dbConn();
         $this->db = "online_sales";
         $this->table = "$this->db.products";
-        $this->short_url = "/online_sales/public/uploads/book_covers";
-        $this->base_path = dirname(__FILE__, 3) . $this->short_url;
+        $this->short_url = "/intraschool/online_sales/public/uploads/book_covers";
+        $this->base_path = dirname(__FILE__, 4) . $this->short_url;
     }
     public function get_products()
     {
@@ -100,14 +100,18 @@ class Products extends DataConn
         $stmt = $this->conn->prepare($sql);
         $response = $stmt->execute([$id_product]);
         $product = $stmt->fetch(PDO::FETCH_OBJ);
+        $a = $product->img;
         if ($product->img) {
             $imagePath = $this->get_product_img($id_product);
             $product->img = $imagePath ? "$this->short_url/" . basename($imagePath) : null;
+            $a = $imagePath;
+            $a ="$this->base_path/{$id_product}_product.*";
         }
         return [
             "response" => $response,
             "response_code" => $response ? 200 : 404,
             "product" => $product,
+            "a" => $a,
         ];
 
     }
