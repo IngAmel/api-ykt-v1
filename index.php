@@ -13,14 +13,16 @@ set_time_limit(0);
 // Obtener la URL de la solicitud
 $request_uri = trim($_SERVER["REQUEST_URI"], "/");
 $base_path = "intraschool/api-ykt";
+//LOCALHOST LUIS 
+//$base_path = "YKT/intraschool/api-ykt-v1";
+
 $route = str_replace($base_path, "", $request_uri);
 $route_segments = explode("/", trim($route, "/"));
 
-// Si no hay segmentos en la URL, ejecutar la lógica principal de index.php
+// Si viene por query string
 if (isset($_GET['req_data'])) {
     include 'controllers/read.php';
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-
         $requested_data = $_GET['req_data'];
         $status_code = 400;
         $data = null;
@@ -69,16 +71,40 @@ if (isset($_GET['req_data'])) {
 $routes = [
     'products' => 'pages/products.php',
     'books' => 'pages/books.php',
+    'invoice' => 'pages/invoice.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
-$main_route = $route_segments[0];
+$main_route = $route_segments[0] ?? null;
+
+if ($main_route === 'invoice') {
+    require_once __DIR__ . '/helpers/auth.php';
+
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+
+    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        http_response_code(401);
+        echo json_encode(["error" => "Token JWT no proporcionado"]);
+        exit;
+    }
+
+    $jwt = $matches[1];
+
+    try {
+        $decoded = validateJWT($jwt);
+        // puedes usar $decoded->user_id o lo que venga en el token
+    } catch (Exception $e) {
+        http_response_code(401);
+        echo json_encode(["error" => $e->getMessage()]);
+        exit;
+    }
+}
 
 if (isset($routes[$main_route])) {
     include_once $routes[$main_route];
 
     $request_method = $_SERVER['REQUEST_METHOD'];
-    $id = isset($route_segments[1]) ? intval($route_segments[1]) : null; // Si existe un ID, convertirlo en número
+    $param = $route_segments[1] ?? null;
 
     // Definir las acciones permitidas
     $routes_definitions = [
@@ -104,20 +130,25 @@ if (isset($routes[$main_route])) {
                 return post_books();
             },
         ],
+        'invoice' => [
+            'GET' => function ($family_code = null) {
+                return $family_code ? getFamilyInvoiceData($family_code) : badRequest();
+            }
+        ],
     ];
 
     // Si el método y la ruta existen, ejecutar la función correspondiente
     if (isset($routes_definitions[$main_route][$request_method])) {
         $handler = $routes_definitions[$main_route][$request_method];
 
-        if ($request_method === 'GET' && $id) {
-            $result = $handler($id); // Obtener un solo producto/libro
-        } elseif (in_array($request_method, ['PUT', 'DELETE']) && !$id) {
+        if ($request_method === 'GET') {
+            $result = $handler($param); // Puede ser string como "ABC123"
+        } elseif (in_array($request_method, ['PUT', 'DELETE']) && !$param) {
             http_response_code(400);
-            echo json_encode(["error" => "ID is required for this operation"]);
+            echo json_encode(["error" => "Parameter is required for this operation"]);
             exit;
         } else {
-            $result = $id ? $handler($id) : $handler(); // Ejecutar la función con o sin ID
+            $result = $param ? $handler($param) : $handler();
         }
 
         http_response_code(200);
