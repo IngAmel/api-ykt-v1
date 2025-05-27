@@ -72,13 +72,13 @@ $routes = [
     'products' => 'pages/products.php',
     'books' => 'pages/books.php',
     'invoice' => 'pages/invoice.php',
-    'studentsByFamily' => 'pages/invoice.php',
+    'familiesActives' => 'pages/families.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-if ($main_route === 'invoice' || $main_route === 'studentsByFamily') {
+/* if ($main_route === 'invoice' || $main_route === 'familiesActives') {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -99,7 +99,7 @@ if ($main_route === 'invoice' || $main_route === 'studentsByFamily') {
         echo json_encode(["error" => $e->getMessage()]);
         exit;
     }
-}
+} */
 
 if (isset($routes[$main_route])) {
     include_once $routes[$main_route];
@@ -134,6 +134,11 @@ if (isset($routes[$main_route])) {
         'invoice' => [
             'GET' => function ($family_code = null) {
                 return $family_code ? getFamilyInvoiceData($family_code) : badRequest();
+            }
+        ],
+        'familiesActives' => [
+            'GET' => function () {
+                return getAllActivesFamilies();
             }
         ],
     ];

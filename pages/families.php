@@ -1,13 +1,13 @@
 <?php
+
 $path_isc = dirname(__FILE__, 3);
 include "$path_isc/vendor/autoload.php";
+use ApiYkt\Models\Families;
 
-use ApiYkt\Models\Invoice;
-
-function getFamilyInvoiceData($family_code)
+function getAllActivesFamilies()
 {
-    $products = new Invoice();
-    $data = $products->getFamilyInvoiceData($family_code);
+    $products = new Families();
+    $data = $products->getAllFamiliesActives();
     return $data;
 }
 
