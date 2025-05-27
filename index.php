@@ -78,7 +78,7 @@ $routes = [
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-/* if ($main_route === 'invoice' || $main_route === 'familiesActives') {
+if ($main_route === 'invoice' || $main_route === 'familiesActives') {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -99,7 +99,7 @@ $main_route = $route_segments[0] ?? null;
         echo json_encode(["error" => $e->getMessage()]);
         exit;
     }
-} */
+}
 
 if (isset($routes[$main_route])) {
     include_once $routes[$main_route];
