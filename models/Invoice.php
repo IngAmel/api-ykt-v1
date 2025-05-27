@@ -2,8 +2,6 @@
 
 namespace ApiYkt\Models;
 
-$path_isc = dirname(__FILE__, 3);
-include "$path_isc/vendor/autoload.php";
 
 use PDO;
 use App\Models\DataConn;

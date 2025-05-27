@@ -4,7 +4,7 @@ include "$path_isc/vendor/autoload.php";
 
 use Firebase\JWT\JWT;
 
-$secret_key = 'YKT123'; // debe ser la misma que usarás para validar
+$secret_key = '3_X9*lKjd0&4'; // debe ser la misma que usarás para validar
 $payload = [
     'client' => 'cliente_ejemplo',
     'iat' => time(),                // Fecha de creación
