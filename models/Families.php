@@ -37,20 +37,22 @@ class Families extends DataConn
             ];
         }
 
-        $familiesActives=[];
+        $familiesActives = [];
         $fam_data = $famInv[0];
         foreach ($famInv as $fam_data) {
             $familiesActives[] = [
-            "familyId" => $fam_data->id_family,
-            "familyCode" => $fam_data->family_code,
-            "familyName" => $fam_data->family_name,
-            "familyPassword" => $fam_data->password,
-            "mainAddress" => $this->getFamilyMainAddress($fam_data->id_family),
-            "attorneyInfo" => $this->getAttorneyInfo($fam_data->id_family, $fam_data->attorney),
-            "students" => $this->getStudentsByFamily($fam_data->family_code)
-        ];
+                "familyId" => $fam_data->id_family,
+                "familyCode" => $fam_data->family_code,
+                "familyName" => $fam_data->family_name,
+                "familyPassword" => $fam_data->password,
+                "updateFamilyInfo" => 'https://intra-ykt.com/intraschool/ykt-online/external_campaigns/data_update/families/login.php',
+                "mainAddress" => $this->getFamilyMainAddress($fam_data->id_family),
+                "attorneyInfo" => $this->getAttorneyInfo($fam_data->id_family, $fam_data->attorney),
+                "students" => $this->getStudentsByFamily($fam_data->family_code),
+                "trustedContacts" => $this->getFamilyTrsutedContacts($fam_data->id_family)
+            ];
         }
-        
+
 
         return (object) [
             "response_code" => $response ? 200 : 404,
@@ -187,75 +189,46 @@ class Families extends DataConn
         return $addressInfo;
     }
 
-    public function getGeneralPublicInvoice($family_code)
+    public function getFamilyTrsutedContacts($id_family)
     {
 
-        $sql = "SELECT 
-        fam.*,
-        CASE 
-            WHEN fam.attorney = 0 THEN fath.mail
-            WHEN fam.attorney = 1 THEN moth.mail
-        END AS family_mail
-        FROM families_ykt.families AS fam
-        INNER JOIN families_ykt.fathers AS fath ON fath.id_family = fam.id_family
-        INNER JOIN families_ykt.mothers AS moth ON moth.id_family = fam.id_family
-        WHERE fam.family_code = :family_code
-        AND fam.status = 1
+        $sql = "SELECT t1.trusted_contact_id, t1.contact_full_name AS contact_name, t1.relationship, t1.cell_phone, 
+                                                CASE
+                                                    WHEN t1.internal_number != '' THEN CONCAT(t1.street, ' no. ext.', t1.external_number, ', no. int.', t1.internal_number, ', ', t1.colony, ', ', t1.delegation, ', CP. ', t1.postal_code)
+                                                    ELSE CONCAT(t1.street, ' no. ext.', t1.external_number, ', ', t1.colony, ', ', t1.delegation, ', CP. ', t1.postal_code)
+                                                END AS contact_address
+                                           FROM families_ykt.trusted_contacts AS t1
+                                           WHERE t1.id_family = :id_family
         ";
+
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':family_code' => $family_code]);
+        $stmt->execute([':id_family' => $id_family]);
 
 
-        $familyData = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $trustedContactsData = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-        if (!$familyData || count($familyData) === 0) {
+        /* if (!$trustedContactsData || count($trustedContactsData) === 0) {
             return (object) [
                 "response_code" => 404,
                 "response" => false,
-                "message" => "No se encontraron datos para la familia con el código $family_code"
+                "message" => "No se encontraron datos del apoderado"
+            ];
+        } */
+
+        // Estructura deseada
+        $trustedContacts = [];
+        foreach ($trustedContactsData as $contact) {
+            $trustedContacts[] = [
+                "contactId" => $contact->trusted_contact_id,
+                "contactName" => $contact->contact_name,
+                "contactRelationship" => $contact->relationship,
+                "contactPhone" => $contact->cell_phone,
+                "contactAddress" => $contact->contact_address
             ];
         }
 
-        $famData = $familyData[0];
-        $famInvoiceData = [
-            "basicInfo" => [
-                "familyId" => $famData->id_family,
-                "familyCode" => $famData->family_code,
-                "familyName" => $famData->family_name,
-                "invoiceType" => "FACTURACIÓN A PÚBLICO GENERAL",
-            ],
-            "reciverInfo" => [
-                "cfdiUse" => "G03",
-                "reciverName" => "PUBLICO GENERAL",
-                "Rfc" => "XAXX010101000",
-                "reciverMail" => $famData->family_mail,
-                "TaxResidence" => "MEX",
-                "invoiceAddress" => [
-                    "street" => "LAFONTAINE",
-                    "extNumber" => "",
-                    "intNumber" => "",
-                    "colony" => "POLANCO",
-                    "delegation" => "MIGUEL HIDALGO",
-                    "zipCode" => "11550",
-                    "betweenStreets" => "",
-                ]
-            ],
-            "students" => $this->getStudentsByFamily($family_code)
-        ];
 
-        return $famInvoiceData;
-    }
 
-    public function validarCURP($curp)
-    {
-        // Expresión regular para validar el formato de la CURP
-        $regex = '/^[A-Z]{1}[AEIOU]{1}[A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[H|M]{1}(AS|BC|BS|CC|CS|CH|CL|CM|CO|DG|DF|GR|GT|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE){1}[BCDFGHJKLMNÑPQRSTVWXYZ]{3}[A-Z0-9]{1}[0-9]{1}$/';
-
-        // Validar si la CURP cumple con el formato
-        if (preg_match($regex, $curp)) {
-            return true; // CURP válida
-        } else {
-            return false; // CURP inválida
-        }
+        return $trustedContacts;
     }
 }
