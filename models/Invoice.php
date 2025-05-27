@@ -44,11 +44,10 @@ class Invoice extends DataConn
 
         $famInv = $stmt->fetchAll(PDO::FETCH_OBJ);
         if (!$famInv || count($famInv) === 0) {
-            return (object) [
-                "response_code" => 404,
-                "response" => false,
-                "message" => "No se encontraron datos de facturación para el código de familia"
-            ];
+
+
+
+            return $this->getGeneralPublicInvoice($family_code);
         }
 
         $fam_data = $famInv[0];
@@ -57,7 +56,7 @@ class Invoice extends DataConn
                 "familyId" => $fam_data->id_family,
                 "familyCode" => $fam_data->family_code,
                 "familyName" => $fam_data->family_name,
-                "invoiceType"=> $fam_data->billing_type_description,
+                "invoiceType" => $fam_data->billing_type_description,
             ],
             "reciverInfo" => [
                 "cfdiUse" => $fam_data->code_cfdi,
@@ -99,7 +98,8 @@ class Invoice extends DataConn
         INNER JOIN txt_generator.academic_levels_equals AS acle ON acle.id_academic_level = al.id_academic_level
         INNER JOIN school_control_ykt.assignments AS asgm ON asgm.id_assignment = (SELECT id_assignment FROM school_control_ykt.assignments WHERE id_group = gps.id_group LIMIT 1)
         INNER JOIN school_control_ykt.revoe_levels AS rev ON rev.id_level_grade = aclg.id_level_grade AND asgm.id_level_combination = rev.id_level_combination
-        LEFT JOIN families_billing_data.payments_students_detail AS psd ON psd.id_student = stud.id_student
+        LEFT JOIN families_billing_data.payments_students_detail AS psd 
+            ON psd.id_paments_students_detail = (SELECT id_paments_students_detail FROM families_billing_data.payments_students_detail psd WHERE psd.id_student = stud.id_student LIMIT 1)
         WHERE fam.family_code = :family_code
         AND gps.group_type_id = 1
         AND insc.active = 1
@@ -197,6 +197,65 @@ class Invoice extends DataConn
         ];
 
         return $attorneyInfo;
+    }
+
+    public function getGeneralPublicInvoice($family_code)
+    {
+
+        $sql = "SELECT 
+        fam.*,
+        CASE 
+            WHEN fam.attorney = 0 THEN fath.mail
+            WHEN fam.attorney = 1 THEN moth.mail
+        END AS family_mail
+        FROM families_ykt.families AS fam
+        INNER JOIN families_ykt.fathers AS fath ON fath.id_family = fam.id_family
+        INNER JOIN families_ykt.mothers AS moth ON moth.id_family = fam.id_family
+        WHERE fam.family_code = :family_code
+        AND fam.status = 1
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':family_code' => $family_code]);
+
+
+        $familyData = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        if (!$familyData || count($familyData) === 0) {
+            return (object) [
+                "response_code" => 404,
+                "response" => false,
+                "message" => "No se encontraron datos para la familia con el código $family_code"
+            ];
+        }
+
+        $famData = $familyData[0];
+        $famInvoiceData = [
+            "basicInfo" => [
+                "familyId" => $famData->id_family,
+                "familyCode" => $famData->family_code,
+                "familyName" => $famData->family_name,
+                "invoiceType" => "FACTURACIÓN A PÚBLICO GENERAL",
+            ],
+            "reciverInfo" => [
+                "cfdiUse" => "G03",
+                "reciverName" => "PUBLICO GENERAL",
+                "Rfc" => "XAXX010101000",
+                "reciverMail" => $famData->family_mail,
+                "TaxResidence" => "MEX",
+                "invoiceAddress" => [
+                    "street" => "LAFONTAINE",
+                    "extNumber" => "",
+                    "intNumber" => "",
+                    "colony" => "POLANCO",
+                    "delegation" => "MIGUEL HIDALGO",
+                    "zipCode" => "11550",
+                    "betweenStreets" => "",
+                ]
+            ],
+            "students" => $this->getStudentsByFamily($family_code)
+        ];
+
+        return $famInvoiceData;
     }
 
     public function validarCURP($curp)
