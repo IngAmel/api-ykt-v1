@@ -12,9 +12,9 @@ set_time_limit(0);
 
 // Obtener la URL de la solicitud
 $request_uri = trim($_SERVER["REQUEST_URI"], "/");
-//$base_path = "intraschool/api-ykt";
+$base_path = "intraschool/api-ykt";
 //LOCALHOST LUIS 
-$base_path = "YKT/intraschool/api-ykt-v1";
+//$base_path = "YKT/intraschool/api-ykt-v1";
 
 $route = str_replace($base_path, "", $request_uri);
 $route_segments = explode("/", trim($route, "/"));
