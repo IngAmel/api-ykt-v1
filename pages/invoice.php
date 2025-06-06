@@ -11,6 +11,18 @@ function getFamilyInvoiceData($family_code)
     return $data;
 }
 
+function getMassiveInvoiceData(array $family_codes)
+{
+    $products = new Invoice();
+    $result = [];
+
+    foreach ($family_codes as $code) {
+        $result[$code] = $products->getFamilyInvoiceData($code);
+    }
+
+    return $result;
+}
+
 function badRequest()
 {
     return [

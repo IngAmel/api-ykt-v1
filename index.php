@@ -12,9 +12,9 @@ set_time_limit(0);
 
 // Obtener la URL de la solicitud
 $request_uri = trim($_SERVER["REQUEST_URI"], "/");
-$base_path = "intraschool/api-ykt";
+//$base_path = "intraschool/api-ykt";
 //LOCALHOST LUIS 
-//$base_path = "YKT/intraschool/api-ykt-v1";
+$base_path = "YKT/intraschool/api-ykt-v1";
 
 $route = str_replace($base_path, "", $request_uri);
 $route_segments = explode("/", trim($route, "/"));
@@ -72,6 +72,7 @@ $routes = [
     'products' => 'pages/products.php',
     'books' => 'pages/books.php',
     'invoice' => 'pages/invoice.php',
+    'invoiceMassive' => 'pages/invoice.php',
     'familiesActives' => 'pages/families.php',
 ];
 
@@ -134,6 +135,20 @@ if (isset($routes[$main_route])) {
         'invoice' => [
             'GET' => function ($family_code = null) {
                 return $family_code ? getFamilyInvoiceData($family_code) : badRequest();
+            }
+        ],
+        'invoiceMassive' => [
+            'POST' => function () {
+                // Leer JSON del cuerpo
+                $input = json_decode(file_get_contents("php://input"), true);
+
+                if (!isset($input['family_codes']) || !is_array($input['family_codes'])) {
+                    http_response_code(400);
+                    return ["error" => "Debe enviar un arreglo llamado 'family_codes'."];
+                }
+
+                // Llamar a tu función que procese el arreglo
+                return getMassiveInvoiceData($input['family_codes']);
             }
         ],
         'familiesActives' => [
