@@ -5,6 +5,17 @@ namespace ApiYkt\Models;
 
 use PDO;
 use App\Models\DataConn;
+use Dotenv\Dotenv;
+
+$development = $_SERVER['SERVER_NAME'] === 'localhost';
+$path_isc = dirname(__FILE__, 3);
+require_once "$path_isc/vendor/autoload.php";
+
+
+$path_isc = $development ? dirname(__FILE__, 3) . "/" : dirname(__FILE__, 8) . "/Program Files/Intra";
+$dotenv = Dotenv::createImmutable($path_isc);
+$dotenv->safeLoad();
+
 
 class Families extends DataConn
 {
@@ -40,11 +51,14 @@ class Families extends DataConn
         $familiesActives = [];
         $fam_data = $famInv[0];
         foreach ($famInv as $fam_data) {
+            $encryptedPass = $this->encryptPassword($fam_data->password);
+            //$decryptedPass = $this->decryptPassword($encryptedPass);
+
             $familiesActives[] = [
                 "familyId" => $fam_data->id_family,
                 "familyCode" => $fam_data->family_code,
                 "familyName" => $fam_data->family_name,
-                "familyPassword" => $fam_data->password,
+                "familyPassword" => $encryptedPass,
                 "updateFamilyInfo" => 'https://intra-ykt.com/intraschool/ykt-online/external_campaigns/data_update/families/login.php',
                 "mainAddress" => $this->getFamilyMainAddress($fam_data->id_family),
                 "attorneyInfo" => $this->getAttorneyInfo($fam_data->id_family, $fam_data->attorney),
@@ -60,6 +74,7 @@ class Families extends DataConn
             "activeFamilies" => $familiesActives
         ];
     }
+
     public function getStudentsByFamily($family_code)
     {
         $sql = "SELECT stud.id_student, UPPER(student_code) AS student_code,
@@ -230,5 +245,33 @@ class Families extends DataConn
 
 
         return $trustedContacts;
+    }
+
+    function encryptPassword($plainText)
+    {
+        $key = $_ENV['FAMILIES_PASSWORD_PRIVATE_KEY'] ?? null;
+        $method = $_ENV['FAMILIES_PASSWORD_PRIVATE_SSL_METHOD'] ?? null;
+
+        $ivLength = openssl_cipher_iv_length($method);
+        $iv = openssl_random_pseudo_bytes($ivLength);
+        $encrypted = openssl_encrypt($plainText, $method, $key, 0, $iv);
+        return base64_encode($iv . $encrypted);
+    }
+
+    function decryptPassword($encryptedText)
+    {
+        $key = $_ENV['FAMILIES_PASSWORD_PRIVATE_KEY'] ?? null;
+        $method = $_ENV['FAMILIES_PASSWORD_PRIVATE_SSL_METHOD'] ?? null;
+
+
+
+        $cipherData = base64_decode($encryptedText);
+        $ivLength = openssl_cipher_iv_length($method);
+
+        $iv = substr($cipherData, 0, $ivLength);
+        $ciphertext = substr($cipherData, $ivLength);
+
+        $decrypted = openssl_decrypt($ciphertext, $method, $key, 0, $iv);
+        return $decrypted;
     }
 }
