@@ -1,7 +1,16 @@
+# /intraschool/api-ykt/.htaccess
 RewriteEngine On
+RewriteBase /intraschool/api-ykt/
 
-# Redirigir todas las solicitudes a index.php dentro de api-ykt
+# Redirigir todas las solicitudes bajo /rigel/ al index.php de rigel
+RewriteCond %{REQUEST_URI} ^/intraschool/api-ykt/rigel/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteRule ^rigel/(.*)$ rigel/index.php?url=$1 [QSA,L]
+
+# Para otras rutas de tu API (si las tienes)
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php [QSA,L]
+
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
