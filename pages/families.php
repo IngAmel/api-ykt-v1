@@ -11,6 +11,13 @@ function getAllActivesFamilies()
     return $data;
 }
 
+function validateLogin($familyCredentials)
+{
+    $products = new Families();
+    $data = $products->validateLogin($familyCredentials);
+    return $data;
+}
+
 function badRequest()
 {
     return [

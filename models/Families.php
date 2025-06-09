@@ -51,6 +51,7 @@ class Families extends DataConn
         $familiesActives = [];
         $fam_data = $famInv[0];
         foreach ($famInv as $fam_data) {
+            $encryptedPass = ($fam_data->password);
             $encryptedPass = $this->encryptPassword($fam_data->password);
             //$decryptedPass = $this->decryptPassword($encryptedPass);
 
@@ -74,6 +75,57 @@ class Families extends DataConn
             "activeFamilies" => $familiesActives
         ];
     }
+
+    public function validateLogin(array $familyCredentials)
+    {
+        if (!isset($familyCredentials['familyCode']) || !isset($familyCredentials['hashedPass'])) {
+            return (object)[
+                "response_code" => 400,
+                "response" => false,
+                "message" => "Faltan parámetros: 'familyCode' y/o 'hashedPass'."
+            ];
+        }
+
+        $family_code = $familyCredentials['familyCode'];
+        $passwordHashFromClient = $familyCredentials['hashedPass'];
+
+        $sql = "SELECT fam.*
+            FROM $this->table AS fam
+            WHERE fam.status = 1 AND fam.family_code = :family_code
+            LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':family_code' => $family_code]);
+
+        $fam_data = $stmt->fetch(PDO::FETCH_OBJ);
+
+        if (!$fam_data) {
+            return (object)[
+                "response_code" => 404,
+                "response" => false,
+                "message" => "No se encontró familia con el código proporcionado"
+            ];
+        }
+
+        // Encriptar la contraseña obtenida de la BD para compararla con la del cliente
+        $encryptedPassFromDB = hash('sha3-512', $fam_data->password);
+
+        if (hash_equals($passwordHashFromClient, $encryptedPassFromDB)) {
+            return (object)[
+                "response_code" => 200,
+                "response" => true,
+                "message" => "Datos correctos para la familia: $family_code"
+            ];
+        } else {
+            return (object)[
+                "response_code" => 401,
+                "response" => false,
+                "message" => "Contraseña incorrecta para el código de familia"
+            ];
+        }
+    }
+
+
 
     public function getStudentsByFamily($family_code)
     {

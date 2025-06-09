@@ -74,12 +74,13 @@ $routes = [
     'invoice' => 'pages/invoice.php',
     'invoiceMassive' => 'pages/invoice.php',
     'familiesActives' => 'pages/families.php',
+    'validateLogin' => 'pages/families.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-if ($main_route === 'invoice' || $main_route === 'familiesActives' || $main_route==='invoiceMassive') {
+if ($main_route === 'invoice' || $main_route === 'familiesActives' || $main_route==='invoiceMassive' || 'validateLogin') {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -154,6 +155,20 @@ if (isset($routes[$main_route])) {
         'familiesActives' => [
             'GET' => function () {
                 return getAllActivesFamilies();
+            }
+        ],
+        'validateLogin' => [
+            'POST' => function () {
+                // Leer JSON del cuerpo
+                $input = json_decode(file_get_contents("php://input"), true);
+
+                if (!isset($input['familyCredentials']) || !is_array($input['familyCredentials'])) {
+                    http_response_code(400);
+                    return ["error" => "Debe enviar un arreglo llamado 'familyCredentials'."];
+                }
+
+                // Llamar a tu función que procese el arreglo
+                return validateLogin($input['familyCredentials']);
             }
         ],
     ];
