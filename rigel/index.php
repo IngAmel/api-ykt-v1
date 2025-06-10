@@ -23,10 +23,10 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 //Agregado para tests locales
-//$request_uri .= "reporteNomina/10/";
-
+//$request_uri .= "reporteNomina/10/?year=2024";
 
 $query_params = $_GET;
+//$query_params["year"] = "2024";
 
 // Base path de tu API
 $base_path = '/intraschool/api-ykt/rigel';
@@ -58,9 +58,50 @@ try {
         case 'GET:reporteNomina':
             if ($id) {
                 // GET /nominas/$id
-                $colab = new Rigel2;
-                $response = $colab->reporteNomina($id);
-                if (!$response) {
+                try {
+                    $id = (int) $id;
+
+                    if ($id > 25 || $id < 0) {
+                        $response = "Nomina invalida";
+                    } else {
+
+                        $dictionary_nom = [
+                            1 => "01",
+                            2 => "01",
+                            3 => "02",
+                            4 => "02",
+                            5 => "03",
+                            6 => "03",
+                            7 => "04",
+                            8 => "04",
+                            9 => "05",
+                            10 => "05",
+                            11 => "06",
+                            12 => "06",
+                            13 => "07",
+                            14 => "07",
+                            15 => "08",
+                            16 => "08",
+                            17 => "09",
+                            18 => "09",
+                            19 => "10",
+                            20 => "10",
+                            21 => "11",
+                            22 => "11",
+                            23 => "12",
+                            24 => "12",
+                        ];
+
+                        $query_params["first"] = $id % 2 !== 0;
+
+
+                        $colab = new Rigel2;
+                        $response = $colab->reporteNomina($id, $query_params);
+                        if (!$response) {
+
+                        }
+                    }
+                } catch (\Throwable $th) {
                     throw new Exception("Nómina no encontrada", 404);
                 }
             } else {
