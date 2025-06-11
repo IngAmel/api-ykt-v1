@@ -162,13 +162,18 @@ if (isset($routes[$main_route])) {
                 // Leer JSON del cuerpo
                 $input = json_decode(file_get_contents("php://input"), true);
 
-                if (!isset($input['familyCredentials']) || !is_array($input['familyCredentials'])) {
+                if (!isset($input['user']) || !isset($input['password'])) {
                     http_response_code(400);
-                    return ["error" => "Debe enviar un arreglo llamado 'familyCredentials'."];
+                    return ["error" => "Debe enviar los campos 'user' y 'password'."];
                 }
 
-                // Llamar a tu función que procese el arreglo
-                return validateLogin($input['familyCredentials']);
+                // Reestructurar como espera la función actual
+                $familyCredentials = [
+                    'familyCode' => $input['user'],
+                    'hashedPass' => $input['password']
+                ];
+
+                return validateLogin($familyCredentials);
             }
         ],
     ];
