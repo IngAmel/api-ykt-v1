@@ -93,12 +93,12 @@ try {
                             25 => "12",
                         ];
 
-                        $query_params["first"] = $id % 2 !== 0;
-                        $query_params["special"] = false;
+                        $query_params["first"] = $id % 2 !== 0 ? 1 : 0;
+                        $query_params["special"] = 0;
 
                         if ($id === 25) {
-                            $query_params["first"] = false;
-                            $query_params["special"] = true;
+                            $query_params["first"] = 0;
+                            $query_params["special"] = 1;
                         }
 
                         $colab = new Rigel2;
