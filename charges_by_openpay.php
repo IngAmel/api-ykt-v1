@@ -60,6 +60,7 @@ if (isset($routes[$request_method][$main_route])) {
 
         if (isset($route_handler[$sub_route])) {
             $handler = $route_handler[$sub_route];
+            header('Content-Type: application/json; charset=utf-8');
 
             // Si la subruta requiere un parámetro (como "charge")
             if ($sub_route === "charge" && isset($route_segments[2])) {
