@@ -24,7 +24,9 @@ function create_charge_with_card()
 }
 function get_charge($id_charge)
 {
-    $payments = new Payments();
+    $enviroment = $_GET["enviroment"] ?? "production";
+
+    $payments = new Payments($enviroment);
     $data = $payments->get_charge($id_charge);
     return [
         "response_code" => $data->response ? 200 : 404,

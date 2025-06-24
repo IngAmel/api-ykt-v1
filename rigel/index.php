@@ -90,13 +90,19 @@ try {
                             22 => "11",
                             23 => "12",
                             24 => "12",
+                            25 => "12",
                         ];
 
-                        $query_params["first"] = $id % 2 !== 0;
+                        $query_params["first"] = $id % 2 !== 0 ? 1 : 0;
+                        $query_params["special"] = 0;
 
+                        if ($id === 25) {
+                            $query_params["first"] = 0;
+                            $query_params["special"] = 1;
+                        }
 
                         $colab = new Rigel2;
-                        $response = $colab->reporteNomina($id, $query_params);
+                        $response = $colab->reporteNomina($dictionary_nom[$id], $query_params);
                         if (!$response) {
 
                         }
@@ -145,7 +151,7 @@ try {
     echo json_encode([
         'success' => true,
         'data' => $response,
-        'params' => $query_params // Opcional: mostrar parámetros recibidos
+        //'params' => $query_params // Opcional: mostrar parámetros recibidos
     ]);
 
 } catch (Exception $e) {
