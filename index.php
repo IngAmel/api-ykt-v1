@@ -75,12 +75,13 @@ $routes = [
     'invoiceMassive' => 'pages/invoice.php',
     'familiesActives' => 'pages/families.php',
     'validateLogin' => 'pages/families.php',
+    'uploadSuppliesListFile' => 'pages/invoice.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-if ($main_route === 'invoice' || $main_route === 'familiesActives' || $main_route==='invoiceMassive' || 'validateLogin') {
+if (in_array($main_route, ['invoice', 'familiesActives', 'invoiceMassive', 'validateLogin'])) {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -176,6 +177,51 @@ if (isset($routes[$main_route])) {
                 return validateLogin($familyCredentials);
             }
         ],
+        'uploadSuppliesListFile' => [
+            'POST' => function () {
+                if (!isset($_FILES['pdf_file']) || !isset($_POST['id_relationship'])) {
+                    http_response_code(400);
+                    return ['success' => false, 'message' => 'Faltan datos'];
+                }
+
+                $file = $_FILES['pdf_file'];
+                $id = $_POST['id_relationship'];
+
+                if ($file['error'] !== UPLOAD_ERR_OK) {
+                    http_response_code(400);
+                    return ['success' => false, 'message' => 'Error al subir el archivo'];
+                }
+
+                $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($file['name']));
+                $uploadDir = dirname(__DIR__) . '/school_control/public/uploads/supplies_list/';
+
+                $uploadPath = $uploadDir . $filename;
+
+                // Asegúrate de que el directorio exista
+                if (!is_dir($uploadDir)) {
+                    if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                        http_response_code(500);
+                        return ['success' => false, 'message' => 'No se pudo crear el directorio de carga'];
+                    }
+                }
+
+                if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                    http_response_code(500);
+                    return ['success' => false, 'message' => 'Error al guardar el archivo'];
+                }
+
+                // Ruta que se guardará en la BD
+                $publicPath = 'school_control/public/uploads/supplies_list/' . $filename;
+
+                // Llama a tu modelo para actualizar el registro
+                require_once 'models/Invoice.php';
+                $model = new \ApiYkt\Models\Invoice();
+                $success = $model->updateSuppliesFileRoute($id, $publicPath); // Debes crear esta función
+
+                return ['success' => $success, 'message' => $success ? 'Archivo subido correctamente' : 'Error al guardar en BD'];
+            }
+        ],
+
     ];
 
     // Si el método y la ruta existen, ejecutar la función correspondiente

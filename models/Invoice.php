@@ -258,6 +258,19 @@ class Invoice extends DataConn
         return $famInvoiceData;
     }
 
+    public function updateSuppliesFileRoute($id_relationship, $filePath)
+    {
+        $sql = "UPDATE school_control_ykt.supplies_list_relationship
+            SET archive_route = :route
+            WHERE id_supplies_list_relationship = :id";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':route' => $filePath,
+            ':id' => $id_relationship
+        ]);
+    }
+
     public function validarCURP($curp)
     {
         // Expresión regular para validar el formato de la CURP
