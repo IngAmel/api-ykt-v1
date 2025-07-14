@@ -271,6 +271,122 @@ class Invoice extends DataConn
         ]);
     }
 
+    public function registerPaymentsBatch(array $payments)
+    {
+        $sql = "INSERT INTO families_billing_data.payments_received (
+            id_payment_concepts,
+            id_months_inscription,
+            id_payment_methods,
+            id_family,
+            amount,
+            date_recipt,
+            reference,
+            date_log
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            http_response_code(500);
+            return [
+                "success" => false,
+                "message" => "Error al preparar la consulta.",
+                "errors" => []
+            ];
+        }
+
+        $date_log = date("Y-m-d H:i:s");
+        $inserted = 0;
+        $errors = [];
+
+        foreach ($payments as $index => $p) {
+            $required = [
+                'id_payment_concepts',
+                'id_months_inscription',
+                'id_payment_methods',
+                'id_family',
+                'amount',
+                'date_recipt',
+                'reference'
+            ];
+
+            foreach ($required as $field) {
+                if (!isset($p[$field])) {
+                    $errors[] = "Pago #$index: falta el campo '$field'.";
+                    continue 2;
+                }
+            }
+
+            $success = $stmt->execute([
+                $p['id_payment_concepts'],
+                $p['id_months_inscription'],
+                $p['id_payment_methods'],
+                $p['id_family'],
+                $p['amount'],
+                $p['date_recipt'],
+                $p['reference'],
+                $date_log
+            ]);
+
+            if ($success) {
+                $inserted++;
+            } else {
+                $err = $stmt->errorInfo();
+                $errors[] = "Pago #$index: error al insertar: " . $err[2];
+            }
+        }
+
+        if (!empty($errors)) {
+            http_response_code(400); // Bad request si hay errores
+            return [
+                "success" => false,
+                "message" => "Se encontraron errores al registrar algunos pagos.",
+                "data" => ["inserted" => $inserted],
+                "errors" => $errors
+            ];
+        }
+
+        return [
+            "success" => true,
+            "message" => "Pagos registrados correctamente.",
+            "data" => ["inserted" => $inserted]
+        ];
+    }
+
+
+    public function registerSinglePayment(array $payment)
+    {
+        // Renombrar claves si es necesario
+        if (isset($payment['id_application_month'])) {
+            $payment['id_months_inscription'] = $payment['id_application_month'];
+            unset($payment['id_application_month']);
+        }
+
+        if (isset($payment['family_code'])) {
+            // Si family_code es un valor externo y necesitas convertirlo a id_family,
+            // aquí deberías hacer una consulta a la base de datos.
+            $stmt = $this->conn->prepare("SELECT id_family FROM families_ykt.families WHERE family_code = ?");
+            $stmt->execute([$payment['family_code']]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$result) {
+                http_response_code(404);
+                return ["error" => "No se encontró una familia con el código proporcionado."];
+            }
+            $payment['id_family'] = $result['id_family'];
+            unset($payment['family_code']);
+        }
+
+        // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
+        $result = $this->registerPaymentsBatch([$payment]);
+
+        if (!empty($result['errors'])) {
+            http_response_code(400);
+        }
+
+        return $result;
+    }
+
+
+
     public function validarCURP($curp)
     {
         // Expresión regular para validar el formato de la CURP

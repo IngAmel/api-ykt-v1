@@ -76,12 +76,13 @@ $routes = [
     'familiesActives' => 'pages/families.php',
     'validateLogin' => 'pages/families.php',
     'uploadSuppliesListFile' => 'pages/invoice.php',
+    'payment-recived' => 'pages/invoice.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-if (in_array($main_route, ['invoice', 'familiesActives', 'invoiceMassive', 'validateLogin'])) {
+if (in_array($main_route, ['invoice', 'familiesActives', 'invoiceMassive', 'validateLogin', 'payment-recived'])) {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -177,6 +178,39 @@ if (isset($routes[$main_route])) {
                 return validateLogin($familyCredentials);
             }
         ],
+
+        'payments-recived-massive' => [
+            'POST' => function () {
+                require_once 'models/Invoice.php';
+                $model = new \ApiYkt\Models\Invoice();
+
+                $input = json_decode(file_get_contents("php://input"), true);
+
+                if (!isset($input['payments']) || !is_array($input['payments'])) {
+                    http_response_code(400);
+                    return ['error' => "Debes enviar un arreglo 'payments' con los pagos."];
+                }
+
+                return $model->registerPaymentsBatch($input['payments']);
+            }
+        ],
+        'payment-recived' => [
+            'POST' => function () {
+                require_once 'models/Invoice.php';
+                $model = new \ApiYkt\Models\Invoice();
+
+                $input = json_decode(file_get_contents("php://input"), true);
+
+                if (!is_array($input)) {
+                    http_response_code(400);
+                    return ['error' => "Debes enviar un objeto JSON con los datos del pago."];
+                }
+
+                return $model->registerSinglePayment($input);
+            }
+        ],
+
+
         'uploadSuppliesListFile' => [
             'POST' => function () {
                 if (!isset($_FILES['pdf_file']) || !isset($_POST['id_relationship'])) {
