@@ -39,18 +39,6 @@ $segments = array_values(array_filter(explode('/', $route)));
 $resource = $segments[0] ?? null;
 $id = $segments[1] ?? null;
 
-// Base de datos simulada (reemplazar con tu conexión real)
-$db = [
-    'nominas' => [
-        21 => ['id' => 21, 'nombre' => 'Nomina Ejemplo', 'valor' => 1000],
-        // Más datos...
-    ],
-    'colaboradores' => [
-        2163 => ['id' => 2163, 'nombre' => 'Juan Pérez', 'puesto' => 'Desarrollador'],
-        // Más datos...
-    ]
-];
-
 try {
     // Manejo de rutas
     switch ("$request_method:$resource") {
@@ -103,12 +91,23 @@ try {
 
                         $colab = new Rigel2;
                         $response = $colab->reporteNomina($dictionary_nom[$id], $query_params);
-                        if (!$response) {
-
-                        }
                     }
                 } catch (\Throwable $th) {
-                    throw new Exception("Nómina no encontrada", 404);
+                    if ((int) $_SESSION["colab"] === 11115) {
+                        $errorDetails = [
+                            'archivo' => $th->getFile(),
+                            'linea' => $th->getLine(),
+                            'mensaje' => $th->getMessage(),
+                            'trace' => $th->getTrace(),
+                            'trace_string' => $th->getTraceAsString(),
+                            'codigo' => $th->getCode(),
+                            'clase' => get_class($th)
+                        ];
+                        echo "<pre>";
+                        var_dump($errorDetails);
+                        echo "</pre>";
+                    }
+                    throw new Exception("Ha ocurrido un error", 500);
                 }
             } else {
                 // GET /nominas/?foo=bar (con filtros)
@@ -159,6 +158,7 @@ try {
     http_response_code($e->getCode() ?: 400);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
+        'code' => $e->getCode()
     ]);
 }
