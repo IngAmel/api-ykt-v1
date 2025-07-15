@@ -356,9 +356,9 @@ class Invoice extends DataConn
     public function registerSinglePayment(array $payment)
     {
         // Renombrar claves si es necesario
-        if (isset($payment['id_application_month'])) {
-            $payment['id_months_inscription'] = $payment['id_application_month'];
-            unset($payment['id_application_month']);
+        if (isset($payment['familia'])) {
+            $payment['family_code'] = $payment['familia'];
+            unset($payment['familia']);
         }
 
         if (isset($payment['family_code'])) {
@@ -375,8 +375,37 @@ class Invoice extends DataConn
             unset($payment['family_code']);
         }
 
+        $month_number = (int) substr($payment['vencimiento'], 5, 2); // "2025-01-01" → "01" → 1
+
+        $stmt = $this->conn->prepare("SELECT id_months_inscription FROM families_billing_data.months_inscription WHERE month_number = ?");
+        $stmt->execute([$month_number]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$result || !isset($result['id_months_inscription'])) {
+            http_response_code(404);
+            return [
+                "success" => false,
+                "message" => "No se encontró un mes de inscripción con número '{$month_number}'."
+            ];
+        }
+
+        $payment['id_months_inscription'] = $result['id_months_inscription'];
+        unset($payment['vencimiento']);
+
+
+        // Adaptar el formato esperado por registerPaymentsBatch
+        $payment2 = [
+            'id_payment_concepts'     => $payment['concepto'],
+            'id_months_inscription'   => $payment['id_months_inscription'], // traducido desde 'vencimiento'
+            'id_payment_methods'      => $payment['metodo'],
+            'id_family'               => $payment['id_family'],            // traducido desde 'familia'
+            'amount'                  => $payment['importe'],                // traducido desde 'importe'
+            'date_recipt'             => $payment['fecha'],                  // traducido desde 'fecha'
+            'reference'               => $payment['referencia']              // mismo nombre
+        ];
+
         // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
-        $result = $this->registerPaymentsBatch([$payment]);
+        $result = $this->registerPaymentsBatch([$payment2]);
 
         if (!empty($result['errors'])) {
             http_response_code(400);
