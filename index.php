@@ -203,10 +203,28 @@ if (isset($routes[$main_route])) {
 
                 if (!is_array($input)) {
                     http_response_code(400);
-                    return ['error' => "Debes enviar un objeto JSON con los datos del pago."];
+                    return ['error' => "Debes enviar un arreglo de objetos JSON con los datos de los pagos."];
                 }
 
-                return $model->registerSinglePayment($input);
+                $results = [];
+                foreach ($input as $idx => $payment) {
+                    if (!is_array($payment)) {
+                        $results[] = [
+                            'index' => $idx,
+                            'success' => false,
+                            'error' => 'El elemento no es un objeto válido'
+                        ];
+                        continue;
+                    }
+
+                    $res = $model->registerSinglePayment($payment);
+                    $results[] = [
+                        'index' => $idx,
+                        'result' => $res
+                    ];
+                }
+
+                return $results;
             }
         ],
 
