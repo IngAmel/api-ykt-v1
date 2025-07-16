@@ -224,7 +224,10 @@ if (isset($routes[$main_route])) {
                     ];
                 }
 
-                return $results;
+                return [
+                    "success" => true,
+                    "message" => "Pagos registrados correctamente.",
+                ];
             }
         ],
 
