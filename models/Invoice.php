@@ -346,7 +346,7 @@ class Invoice extends DataConn
 
         return [
             "success" => true,
-            "message" => "Pago registrado correctamente.",
+            "message" => "Pago recibidos.",
         ];
     }
 
