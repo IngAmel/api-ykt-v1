@@ -340,15 +340,13 @@ class Invoice extends DataConn
             return [
                 "success" => false,
                 "message" => "Se encontraron errores al registrar algunos pagos.",
-                "data" => ["inserted" => $inserted],
                 "errors" => $errors
             ];
         }
 
         return [
             "success" => true,
-            "message" => "Pagos registrados correctamente.",
-            "data" => ["inserted" => $inserted]
+            "message" => "Pago registrado correctamente.",
         ];
     }
 
