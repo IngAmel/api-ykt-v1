@@ -76,13 +76,14 @@ $routes = [
     'familiesActives' => 'pages/families.php',
     'validateLogin' => 'pages/families.php',
     'uploadSuppliesListFile' => 'pages/invoice.php',
-    'payment-recived' => 'pages/invoice.php',
+    'payment-received' => 'pages/invoice.php',
+    'payment-received-test' => 'pages/invoice.php',
 ];
 
 // Verificar si la primera parte de la ruta es una de las páginas definidas
 $main_route = $route_segments[0] ?? null;
 
-if (in_array($main_route, ['invoice', 'familiesActives', 'invoiceMassive', 'validateLogin', 'payment-recived'])) {
+if (in_array($main_route, ['invoice', 'familiesActives', 'invoiceMassive', 'validateLogin', 'payment-received', 'payment-received-test'])) {
     require_once __DIR__ . '/helpers/auth.php';
 
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
@@ -194,7 +195,7 @@ if (isset($routes[$main_route])) {
                 return $model->registerPaymentsBatch($input['payments']);
             }
         ],
-        'payment-recived' => [
+        'payment-received' => [
             'POST' => function () {
                 require_once 'models/Invoice.php';
                 $model = new \ApiYkt\Models\Invoice();
@@ -226,7 +227,43 @@ if (isset($routes[$main_route])) {
 
                 return [
                     "success" => true,
-                    "message" => "Pagos registrados correctamente.",
+                    "message" => "Pagos registrados.",
+                ];
+            }
+        ],
+        'payment-received-test' => [
+            'POST' => function () {
+                require_once 'models/Invoice.php';
+                $model = new \ApiYkt\Models\Invoice();
+
+                $input = json_decode(file_get_contents("php://input"), true);
+
+                if (!is_array($input)) {
+                    http_response_code(400);
+                    return ['error' => "Debes enviar un arreglo de objetos JSON con los datos de los pagos."];
+                }
+
+                $results = [];
+                foreach ($input as $idx => $payment) {
+                    if (!is_array($payment)) {
+                        $results[] = [
+                            'index' => $idx,
+                            'success' => false,
+                            'error' => 'El elemento no es un objeto válido'
+                        ];
+                        continue;
+                    }
+
+                    $res = $model->registerSinglePaymentTest($payment);
+                    $results[] = [
+                        'index' => $idx,
+                        'result' => $res
+                    ];
+                }
+
+                return [
+                    "success" => true,
+                    "message" => "Pagos registrados.",
                 ];
             }
         ],

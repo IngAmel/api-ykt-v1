@@ -281,8 +281,9 @@ class Invoice extends DataConn
             amount,
             date_recipt,
             reference,
-            date_log
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            date_log,
+            test_payment
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) {
@@ -324,7 +325,8 @@ class Invoice extends DataConn
                 $p['amount'],
                 $p['date_recipt'],
                 $p['reference'],
-                $date_log
+                $date_log,
+                $p['test_paymeny']
             ]);
 
             if ($success) {
@@ -399,7 +401,69 @@ class Invoice extends DataConn
             'id_family'               => $payment['id_family'],            // traducido desde 'familia'
             'amount'                  => $payment['importe'],                // traducido desde 'importe'
             'date_recipt'             => $payment['fecha'],                  // traducido desde 'fecha'
-            'reference'               => $payment['referencia']              // mismo nombre
+            'reference'               => $payment['referencia'],              // mismo nombre
+            'test_paymeny'            => 0
+        ];
+
+        // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
+        $result = $this->registerPaymentsBatch([$payment2]);
+
+        if (!empty($result['errors'])) {
+            http_response_code(400);
+        }
+
+        return $result;
+    }
+    public function registerSinglePaymentTest(array $payment)
+    {
+        // Renombrar claves si es necesario
+        if (isset($payment['familia'])) {
+            $payment['family_code'] = $payment['familia'];
+            unset($payment['familia']);
+        }
+
+        if (isset($payment['family_code'])) {
+            // Si family_code es un valor externo y necesitas convertirlo a id_family,
+            // aquí deberías hacer una consulta a la base de datos.
+            $stmt = $this->conn->prepare("SELECT id_family FROM families_ykt.families WHERE family_code = ?");
+            $stmt->execute([$payment['family_code']]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$result) {
+                http_response_code(404);
+                return ["error" => "No se encontró una familia con el código proporcionado."];
+            }
+            $payment['id_family'] = $result['id_family'];
+            unset($payment['family_code']);
+        }
+
+        $month_number = (int) substr($payment['vencimiento'], 5, 2); // "2025-01-01" → "01" → 1
+
+        $stmt = $this->conn->prepare("SELECT id_months_inscription FROM families_billing_data.months_inscription WHERE month_number = ?");
+        $stmt->execute([$month_number]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$result || !isset($result['id_months_inscription'])) {
+            http_response_code(404);
+            return [
+                "success" => false,
+                "message" => "No se encontró un mes de inscripción con número '{$month_number}'."
+            ];
+        }
+
+        $payment['id_months_inscription'] = $result['id_months_inscription'];
+        unset($payment['vencimiento']);
+
+
+        // Adaptar el formato esperado por registerPaymentsBatch
+        $payment2 = [
+            'id_payment_concepts'     => $payment['concepto'],
+            'id_months_inscription'   => $payment['id_months_inscription'], // traducido desde 'vencimiento'
+            'id_payment_methods'      => $payment['metodo'],
+            'id_family'               => $payment['id_family'],            // traducido desde 'familia'
+            'amount'                  => $payment['importe'],                // traducido desde 'importe'
+            'date_recipt'             => $payment['fecha'],                  // traducido desde 'fecha'
+            'reference'               => $payment['referencia'],              // mismo nombre
+            'test_paymeny'            => 1
         ];
 
         // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
