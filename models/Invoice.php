@@ -326,7 +326,7 @@ class Invoice extends DataConn
                 $p['date_recipt'],
                 $p['reference'],
                 $date_log,
-                $p['test_paymeny']
+                $p['test_payment']
             ]);
 
             if ($success) {
@@ -402,7 +402,7 @@ class Invoice extends DataConn
             'amount'                  => $payment['importe'],                // traducido desde 'importe'
             'date_recipt'             => $payment['fecha'],                  // traducido desde 'fecha'
             'reference'               => $payment['referencia'],              // mismo nombre
-            'test_paymeny'            => 0
+            'test_payment'            => 0
         ];
 
         // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
@@ -414,6 +414,7 @@ class Invoice extends DataConn
 
         return $result;
     }
+
     public function registerSinglePaymentTest(array $payment)
     {
         // Renombrar claves si es necesario
@@ -463,7 +464,7 @@ class Invoice extends DataConn
             'amount'                  => $payment['importe'],                // traducido desde 'importe'
             'date_recipt'             => $payment['fecha'],                  // traducido desde 'fecha'
             'reference'               => $payment['referencia'],              // mismo nombre
-            'test_paymeny'            => 1
+            'test_payment'            => 1
         ];
 
         // Llamar a la función que ya hace la inserción, pero con arreglo de un solo elemento
