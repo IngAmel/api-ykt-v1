@@ -355,6 +355,26 @@ class Invoice extends DataConn
 
     public function registerSinglePayment(array $payment)
     {
+
+        // Campos que tu API espera recibir en el JSON
+        $requiredFields = ['familia', 'concepto', 'metodo', 'importe', 'fecha', 'vencimiento', 'referencia'];
+
+        $missing = [];
+        foreach ($requiredFields as $field) {
+            if (!isset($payment[$field])) {
+                $missing[] = $field;
+            }
+        }
+
+        if (!empty($missing)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "message" => "Faltan campos obligatorios en el JSON.",
+                "missing_fields" => $missing
+            ];
+        }
+
         // Renombrar claves si es necesario
         if (isset($payment['familia'])) {
             $payment['family_code'] = $payment['familia'];
@@ -417,6 +437,26 @@ class Invoice extends DataConn
 
     public function registerSinglePaymentTest(array $payment)
     {
+
+        // Campos que tu API espera recibir en el JSON
+        $requiredFields = ['familia', 'concepto', 'metodo', 'importe', 'fecha', 'vencimiento', 'referencia'];
+
+        $missing = [];
+        foreach ($requiredFields as $field) {
+            if (!isset($payment[$field])) {
+                $missing[] = $field;
+            }
+        }
+
+        if (!empty($missing)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "message" => "Faltan campos obligatorios en el JSON.",
+                "missing_fields" => $missing
+            ];
+        }
+
         // Renombrar claves si es necesario
         if (isset($payment['familia'])) {
             $payment['family_code'] = $payment['familia'];

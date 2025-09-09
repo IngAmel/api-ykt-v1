@@ -225,11 +225,11 @@ if (isset($routes[$main_route])) {
                     ];
                 }
 
-                //return $results;
-                return [
+                return $results;
+                /* return [
                     "success" => true,
                     "message" => "Pagos registrados.",
-                ];
+                ]; */
             }
         ],
         'payment-received-test' => [
@@ -262,10 +262,11 @@ if (isset($routes[$main_route])) {
                     ];
                 }
 
-                return [
+                return $results;
+                /* return [
                     "success" => true,
                     "message" => "Pagos registrados.",
-                ];
+                ]; */
             }
         ],
 
