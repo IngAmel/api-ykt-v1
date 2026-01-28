@@ -3,7 +3,7 @@ $path_isc = dirname(__FILE__, 3);
 include "$path_isc/vendor/autoload.php";
 use Cobranza\PHP\Models\Payments;
 use Cobranza\PHP\Models\BillingMail;
-use Rigel\Colaboradores\MailerSingleton;
+use App\Models\MailerSingleton;
 function create_charge_with_card()
 {
     $data = json_decode(file_get_contents('php://input'), true);
