@@ -288,11 +288,15 @@ if (isset($routes[$main_route])) {
 
 
                 $timestamp = date('Ymd_His');
-                $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($file['name']));
-                $filename = $filename  . '_' . $timestamp;
-                
+
+                $cleanName = preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($file['name']));
+
+                $extension = pathinfo($cleanName, PATHINFO_EXTENSION);
+                $nameOnly  = pathinfo($cleanName, PATHINFO_FILENAME);
+
+                $filename = $nameOnly . '_' . $timestamp . '.' . $extension;
                 $uploadDir = dirname(__DIR__) . '/school_control/public/uploads/supplies_list/';
-                
+
 
                 $uploadPath = $uploadDir . $filename;
 
