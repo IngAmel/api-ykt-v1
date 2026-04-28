@@ -287,14 +287,12 @@ if (isset($routes[$main_route])) {
                 }
 
 
+                $timestamp = date('Ymd_His');
                 $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($file['name']));
-
-                $timestamp = date('Ymd_His'); // 20260428_153045
-
                 $filename = $filename  . '_' . $timestamp;
-
-                $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($file['name']));
+                
                 $uploadDir = dirname(__DIR__) . '/school_control/public/uploads/supplies_list/';
+                
 
                 $uploadPath = $uploadDir . $filename;
 
